@@ -1,0 +1,41 @@
+[package]
+name = "stegsolve-rs"
+version = "0.1.0"
+edition = "2021"
+authors = ["DawnMagnet"]
+description = "A Rust implementation of Stegsolve for steganography analysis"
+license = "MIT"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+slint = { version = "1.14.1", default-features = false, features = [
+    "std",
+    "backend-winit",
+    "renderer-femtovg",
+    "compat-1-2",
+] }
+image = { version = "0.24", default-features = false, features = [
+    "png",
+    "jpeg",
+    "gif",
+    "bmp",
+    "tiff",
+    "webp",
+] }
+rfd = "0.12"
+anyhow = "1.0"
+arboard = "3.4"
+
+[build-dependencies]
+slint-build = "1.14.1"
+
+[target.'cfg(windows)'.build-dependencies]
+winresource = "0.1"
+
+[profile.release]
+strip = true      # 去除调试符号
+lto = true        # 链接时优化
+codegen-units = 1 # 更好的优化
+opt-level = "z"   # 优先体积而非速度
+panic = "abort"   # 减小panic处理代码

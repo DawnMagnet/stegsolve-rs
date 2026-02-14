@@ -1,52 +1,47 @@
-# .goreleaser.yaml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/goreleaser/goreleaser/master/www/docs/static/schema.json
 version: 2
 
 project_name: stegsolve-rs
 
-before:
-  hooks:
-    - cargo fetch
-
 builds:
   - id: "stegsolve-rs"
     builder: rust
-    binary: stegsolve
-    command: zigbuild
     env:
-      - RUST_FONTCONFIG_DLOPEN=1
       - PKG_CONFIG_ALLOW_CROSS=1
-      - RUSTFLAGS=-C link-arg=-Wl,--allow-shlib-undefined
     targets:
       - x86_64-unknown-linux-gnu
       - aarch64-unknown-linux-gnu
       - x86_64-pc-windows-gnu
-      - x86_64-apple-darwin
-      - aarch64-apple-darwin
-
-archives:
-  - formats: ["tar.gz"]
-    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    files:
-      - LICENSE
-      - README.md
-      - CHANGELOG.md
-      - assets/**/*
+      # - x86_64-apple-darwin
+      # - aarch64-apple-darwin
 
 nfpms:
-  - maintainer: DawnMagnet
+  - ids:
+      - "stegsolve-rs"
+    maintainer: DawnMagnet
     description: A Rust implementation of Stegsolve for steganography analysis
     homepage: https://github.com/DawnMagnet/stegsolve-rs
     license: MIT
     formats:
       - deb
       - rpm
+      - archlinux
+      - apk
     dependencies:
       - libxkbcommon0
       - libfontconfig1
-    contents:
-      - src: ./assets/icons/stegsolve.png
-        dst: /usr/share/icons/hicolor/256x256/apps/stegsolve-rs.png
+    bindir: /usr/bin
+upx:
+  - # Whether to enable it or not.
+    #
+    # Templates: allowed.
+    enabled: true
 
+    # Filter by build ID.
+    ids:
+      - "stegsolve-rs"
+    # Valid options are from '1' (faster) to '9' (better), and 'best'.
+    compress: best
 checksum:
   name_template: "checksums.txt"
 

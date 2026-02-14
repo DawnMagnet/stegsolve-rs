@@ -1,6 +1,6 @@
 [package]
 name = "stegsolve-rs"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 authors = ["DawnMagnet"]
 description = "A Rust implementation of Stegsolve for steganography analysis"
@@ -33,6 +33,8 @@ slint = { version = "*", default-features = false, features = [
     "renderer-software",
     "compat-1-2",
 ] }
+rfd = { version = "*", default-features = false, features = ["xdg-portal"] }
+fontique = { version = "0.7", features = ["fontconfig-dlopen"] }
 
 [target.'cfg(not(target_os = "linux"))'.dependencies]
 slint = { version = "*", default-features = false, features = [
@@ -41,6 +43,7 @@ slint = { version = "*", default-features = false, features = [
     "renderer-software",
     "compat-1-2",
 ] }
+rfd = "*"
 [dependencies]
 image = { version = "*", default-features = false, features = [
     "png",
@@ -50,7 +53,6 @@ image = { version = "*", default-features = false, features = [
     "tiff",
     "webp",
 ] }
-rfd = "*"
 anyhow = "*"
 arboard = "*"
 

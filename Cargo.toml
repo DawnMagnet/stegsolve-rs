@@ -1,21 +1,48 @@
 [package]
 name = "stegsolve-rs"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 authors = ["DawnMagnet"]
 description = "A Rust implementation of Stegsolve for steganography analysis"
 license = "MIT"
+repository = "https://github.com/DawnMagnet/stegsolve-rs"
+
+[package.metadata.wix]
+upgrade-guid = "7DCE9BB7-728C-428D-AA4E-642E7A69F52D"
+path-guid = "E7B13FC9-23C3-4AF5-A5CE-850F7A010EB2"
+license = false
+eula = false
+
+[lib]
+name = "stegsolve_rs"
+path = "src/lib.rs"
+
+[[bin]]
+name = "stegsolve-rs"
+path = "src/main.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[dependencies]
-slint = { version = "1.14.1", default-features = false, features = [
+
+# when linux build, use slint with the "backend-linuxkms" feature, which uses the KMS/DRM subsystem for rendering. This allows for better performance and compatibility with a wider range of hardware.
+
+[target.'cfg(target_os = "linux")'.dependencies]
+slint = { version = "*", default-features = false, features = [
     "std",
     "backend-winit",
-    "renderer-femtovg",
+    "renderer-software",
     "compat-1-2",
 ] }
-image = { version = "0.24", default-features = false, features = [
+
+[target.'cfg(not(target_os = "linux"))'.dependencies]
+slint = { version = "*", default-features = false, features = [
+    "std",
+    "backend-winit",
+    "renderer-software",
+    "compat-1-2",
+] }
+[dependencies]
+image = { version = "*", default-features = false, features = [
     "png",
     "jpeg",
     "gif",
@@ -23,15 +50,19 @@ image = { version = "0.24", default-features = false, features = [
     "tiff",
     "webp",
 ] }
-rfd = "0.12"
-anyhow = "1.0"
-arboard = "3.4"
+rfd = "*"
+anyhow = "*"
+arboard = "*"
+
+[dev-dependencies]
+proptest = "*"
+pretty_assertions = "*"
 
 [build-dependencies]
-slint-build = "1.14.1"
+slint-build = "*"
 
 [target.'cfg(windows)'.build-dependencies]
-winresource = "0.1"
+winresource = "*"
 
 [profile.release]
 strip = true      # 去除调试符号

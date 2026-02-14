@@ -5,7 +5,7 @@ fn main() {
     #[cfg(windows)]
     {
         let mut res = winresource::WindowsResource::new();
-        res.set_icon("icon.ico")
+        res.set_icon("assets/icons/icon.ico")
             .set("ProductName", "StegSolve-RS")
             .set("FileDescription", "Steganography Analysis Tool")
             .set("LegalCopyright", "Copyright 2026");

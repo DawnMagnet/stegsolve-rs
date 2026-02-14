@@ -1,0 +1,21 @@
+import { HorizontalBox, CheckBox } from "std-widgets.slint";
+
+export component BitSelector inherits HorizontalBox {
+    in property <string> label;
+    in property <int> bit-offset;
+    callback bit-toggled(int, bool);
+
+    spacing: 6px;
+    Text {
+        text: root.label;
+        width: 16px;
+        vertical-alignment: center;
+    }
+
+    for bit-idx in 8: CheckBox {
+        text: "\{bit-idx}";
+        toggled => {
+            root.bit-toggled(root.bit-offset + bit-idx, self.checked);
+        }
+    }
+}

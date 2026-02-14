@@ -1,0 +1,160 @@
+import {
+    Button,
+    VerticalBox,
+    HorizontalBox,
+    CheckBox,
+    TextEdit,
+    ComboBox,
+} from "std-widgets.slint";
+import { BitSelector } from "bit-selector.slint";
+
+export component DataExtractDialog inherits Window {
+    title: "Data Extract";
+    min-width: 624px;
+    min-height: 468px;
+
+    in-out property <bool> lsb-first: true;
+    in-out property <bool> row-order: true;
+    in-out property <int> color-order: 0;
+    in property <string> preview-text: "";
+
+    callback update-mask(int, bool);
+    callback request-preview();
+    callback close-dialog();
+    callback update-overlay(bool);
+    callback copy-hex-view();
+    callback copy-hex-raw();
+    callback copy-bin();
+
+    VerticalBox {
+        padding: 10px;
+        spacing: 8px;
+
+        Text {
+            text: "Bit Mask (R/G/B/A 0-7)";
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        BitSelector {
+            label: "R";
+            bit-offset: 0;
+            bit-toggled(idx, val) => {
+                root.update-mask(idx, val);
+                root.request-preview();
+            }
+        }
+
+        BitSelector {
+            label: "G";
+            bit-offset: 8;
+            bit-toggled(idx, val) => {
+                root.update-mask(idx, val);
+                root.request-preview();
+            }
+        }
+
+        BitSelector {
+            label: "B";
+            bit-offset: 16;
+            bit-toggled(idx, val) => {
+                root.update-mask(idx, val);
+                root.request-preview();
+            }
+        }
+
+        BitSelector {
+            label: "A";
+            bit-offset: 24;
+            bit-toggled(idx, val) => {
+                root.update-mask(idx, val);
+                root.request-preview();
+            }
+        }
+
+        HorizontalBox {
+            spacing: 12px;
+            CheckBox {
+                text: "LSB first";
+                checked <=> root.lsb-first;
+                toggled => {
+                    root.request-preview();
+                }
+            }
+
+            CheckBox {
+                text: "Row order";
+                checked <=> root.row-order;
+                toggled => {
+                    root.request-preview();
+                }
+            }
+
+            CheckBox {
+                text: "Mask Overlay";
+                toggled => {
+                    root.update-overlay(self.checked);
+                }
+            }
+
+            Text {
+                text: "Channel order";
+                vertical-alignment: center;
+            }
+
+            ComboBox {
+                model: ["RGB", "RBG", "GRB", "GBR", "BRG", "BGR"];
+                current-index <=> root.color-order;
+                selected(_) => {
+                    root.request-preview();
+                }
+            }
+        }
+
+        Text {
+            text: "Preview";
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        TextEdit {
+            text: root.preview-text;
+            read-only: true;
+            font-family: "Consolas";
+            min-height: 32px;
+            vertical-stretch: 1;
+        }
+
+        HorizontalBox {
+            alignment: end;
+            spacing: 8px;
+            Button {
+                text: "Copy Hex";
+                clicked => {
+                    root.copy-hex-view();
+                }
+            }
+
+            Button {
+                text: "Copy Bin";
+                clicked => {
+                    root.copy-bin();
+                }
+            }
+
+            Button {
+                text: "Copy HEX";
+                clicked => {
+                    root.copy-hex-raw();
+                }
+            }
+
+            Button {
+                text: "Close";
+                clicked => {
+                    root.close-dialog();
+                }
+            }
+        }
+    }
+}

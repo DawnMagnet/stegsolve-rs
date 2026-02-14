@@ -1,4 +1,4 @@
-use crate::filters::FilterMode;
+use crate::core::filters::FilterMode;
 use image::DynamicImage;
 
 pub struct AppState {
@@ -11,8 +11,8 @@ pub struct AppState {
     show_mask_overlay: bool,
 }
 
-impl AppState {
-    pub fn new() -> Self {
+impl Default for AppState {
+    fn default() -> Self {
         Self {
             frames: Vec::new(),
             index: 0,
@@ -22,6 +22,12 @@ impl AppState {
             is_playing: false,
             show_mask_overlay: false,
         }
+    }
+}
+
+impl AppState {
+    pub fn new() -> Self {
+        Self::default()
     }
 
     pub fn set_frames(&mut self, frames: Vec<DynamicImage>, file_name: String) {
@@ -119,7 +125,7 @@ pub trait MaskUpdate {
 
 impl MaskUpdate for AppState {
     fn set_mask_bit(&mut self, idx: i32, checked: bool) {
-        if idx < 0 || idx >= 32 {
+        if !(0..32).contains(&idx) {
             return;
         }
         let bit = 1u32 << (idx as u32);
@@ -128,5 +134,59 @@ impl MaskUpdate for AppState {
         } else {
             self.extract_mask &= !bit;
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use image::{DynamicImage, RgbaImage};
+
+    #[test]
+    fn test_new_state() {
+        let state = AppState::new();
+        assert_eq!(state.frame_count(), 0);
+        assert_eq!(state.filter(), FilterMode::Normal);
+        assert_eq!(state.extract_mask(), 0);
+    }
+
+    #[test]
+    fn test_frame_navigation() {
+        let mut state = AppState::new();
+        let frames = vec![
+            DynamicImage::ImageRgba8(RgbaImage::new(1, 1)),
+            DynamicImage::ImageRgba8(RgbaImage::new(1, 1)),
+        ];
+        state.set_frames(frames, "test.png".to_string());
+
+        assert_eq!(state.frame_index(), 0);
+        state.next_frame();
+        assert_eq!(state.frame_index(), 1);
+        state.next_frame();
+        assert_eq!(state.frame_index(), 0); // Wrap
+
+        state.prev_frame();
+        assert_eq!(state.frame_index(), 1); // Wrap
+    }
+
+    #[test]
+    fn test_filter_navigation() {
+        let mut state = AppState::new();
+        assert_eq!(state.filter(), FilterMode::Normal);
+        state.next_filter();
+        assert_ne!(state.filter(), FilterMode::Normal);
+        state.prev_filter();
+        assert_eq!(state.filter(), FilterMode::Normal);
+    }
+
+    #[test]
+    fn test_mask_bits() {
+        let mut state = AppState::new();
+        state.set_mask_bit(0, true);
+        assert_eq!(state.extract_mask(), 1);
+        state.set_mask_bit(8, true);
+        assert_eq!(state.extract_mask(), 1 | (1 << 8));
+        state.set_mask_bit(0, false);
+        assert_eq!(state.extract_mask(), 1 << 8);
     }
 }

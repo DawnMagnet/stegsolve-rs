@@ -1,20 +1,46 @@
+//! # Image Filters
+//!
+//! This module provides various filters for steganography analysis.
+//! It includes color space transformations, bit plane extractions,
+//! and thresholding utilities.
+//!
+//! ## Key Features
+//! - Bit-plane extraction (0-7 for each RGBA channel)
+//! - Color inversions and grayscale conversion
+//! - Random color mapping for pattern discovery
+//! - Binary thresholding
+
 use image::{DynamicImage, GenericImageView};
 use slint::{Rgba8Pixel, SharedPixelBuffer};
 
+/// Supported image analysis filters.
+///
+/// These modes define how each pixel's color channels are transformed
+/// for visual analysis.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum FilterMode {
+    /// No transformation applied.
     Normal,
+    /// Inverts RGBA values (255 - value).
     Invert,
+    /// Converts to grayscale using standard luminance weights.
     Gray,
+    /// Applies a deterministic pseudo-random map to colors.
     RandomMap,
+    /// Converts to black or white based on average luminance.
     BinaryThreshold,
+    /// Displays a specific bit (0-7) of the Red channel.
     RedPlane(u8),
+    /// Displays a specific bit (0-7) of the Green channel.
     GreenPlane(u8),
+    /// Displays a specific bit (0-7) of the Blue channel.
     BluePlane(u8),
+    /// Displays a specific bit (0-7) of the Alpha channel.
     AlphaPlane(u8),
 }
 
 impl FilterMode {
+    /// Cycles to the next filter mode.
     pub fn next(&self) -> Self {
         match self {
             FilterMode::Normal => FilterMode::Invert,
@@ -47,18 +73,20 @@ impl FilterMode {
             mode = next;
         }
     }
+}
 
-    pub fn to_string(&self) -> String {
+impl std::fmt::Display for FilterMode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            FilterMode::Normal => "Normal Image".to_string(),
-            FilterMode::Invert => "Inverted".to_string(),
-            FilterMode::Gray => "Grayscale".to_string(),
-            FilterMode::RandomMap => "Random Color Map".to_string(),
-            FilterMode::BinaryThreshold => "Binary Threshold".to_string(),
-            FilterMode::RedPlane(i) => format!("Red Plane {}", i),
-            FilterMode::GreenPlane(i) => format!("Green Plane {}", i),
-            FilterMode::BluePlane(i) => format!("Blue Plane {}", i),
-            FilterMode::AlphaPlane(i) => format!("Alpha Plane {}", i),
+            FilterMode::Normal => write!(f, "Normal Image"),
+            FilterMode::Invert => write!(f, "Inverted"),
+            FilterMode::Gray => write!(f, "Grayscale"),
+            FilterMode::RandomMap => write!(f, "Random Color Map"),
+            FilterMode::BinaryThreshold => write!(f, "Binary Threshold"),
+            FilterMode::RedPlane(i) => write!(f, "Red Plane {}", i),
+            FilterMode::GreenPlane(i) => write!(f, "Green Plane {}", i),
+            FilterMode::BluePlane(i) => write!(f, "Blue Plane {}", i),
+            FilterMode::AlphaPlane(i) => write!(f, "Alpha Plane {}", i),
         }
     }
 }
@@ -188,4 +216,106 @@ fn has_mask_bit(channel_val: u8, mask: u8) -> bool {
         }
     }
     false
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use image::RgbaImage;
+
+    #[test]
+    fn test_filter_normal() {
+        assert_eq!(
+            apply_filter_pixel(10, 20, 30, 40, FilterMode::Normal),
+            [10, 20, 30, 40]
+        );
+    }
+
+    #[test]
+    fn test_filter_invert() {
+        assert_eq!(
+            apply_filter_pixel(10, 20, 30, 40, FilterMode::Invert),
+            [245, 235, 225, 40]
+        );
+    }
+
+    #[test]
+    fn test_filter_gray() {
+        let pixel = apply_filter_pixel(100, 100, 100, 255, FilterMode::Gray);
+        assert_eq!(pixel[0], pixel[1]);
+        assert_eq!(pixel[1], pixel[2]);
+        assert_eq!(pixel[3], 255);
+    }
+
+    #[test]
+    fn test_bit_planes() {
+        // Bit 0 of 1 is 1 -> [255, 255, 255, 255]
+        assert_eq!(
+            apply_filter_pixel(1, 0, 0, 255, FilterMode::RedPlane(0)),
+            [255, 255, 255, 255]
+        );
+        // Bit 0 of 2 is 0 -> [0, 0, 0, 255]
+        assert_eq!(
+            apply_filter_pixel(2, 0, 0, 255, FilterMode::RedPlane(0)),
+            [0, 0, 0, 255]
+        );
+        // Bit 7 of 128 is 1
+        assert_eq!(
+            apply_filter_pixel(128, 0, 0, 255, FilterMode::RedPlane(7)),
+            [255, 255, 255, 255]
+        );
+    }
+
+    #[test]
+    fn test_filter_cycle() {
+        let mode = FilterMode::Normal;
+        let next = mode.next();
+        assert_eq!(next, FilterMode::Invert);
+        let prev = next.prev();
+        assert_eq!(prev, FilterMode::Normal);
+    }
+
+    #[test]
+    fn test_binary_threshold() {
+        assert_eq!(
+            apply_filter_pixel(200, 200, 200, 255, FilterMode::BinaryThreshold),
+            [255, 255, 255, 255]
+        );
+        assert_eq!(
+            apply_filter_pixel(50, 50, 50, 255, FilterMode::BinaryThreshold),
+            [0, 0, 0, 255]
+        );
+    }
+
+    #[test]
+    fn test_process_image() {
+        let mut img_buf = RgbaImage::new(2, 2);
+        img_buf.put_pixel(0, 0, image::Rgba([255, 0, 0, 255]));
+        let img = DynamicImage::ImageRgba8(img_buf);
+        let (w, h, bytes) = process_image_bytes(&img, FilterMode::Invert);
+        assert_eq!(w, 2);
+        assert_eq!(h, 2);
+        // [255,0,0,255] inverted -> [0,255,255,255]
+        assert_eq!(bytes[0], 0);
+        assert_eq!(bytes[1], 255);
+        assert_eq!(bytes[2], 255);
+    }
+
+    #[test]
+    fn test_blend_overlay() {
+        let base = vec![100, 100, 100, 255, 200, 200, 200, 255];
+        let overlay = vec![255, 0, 0, 128, 0, 255, 0, 255]; // 50% red, 100% green
+        let blended = blend_overlay_bytes(&base, &overlay);
+        assert_eq!(blended.len(), 8);
+        // Second pixel should be pure green because overlay alpha is 255
+        assert_eq!(blended[4], 0);
+        assert_eq!(blended[5], 255);
+        assert_eq!(blended[6], 0);
+    }
+
+    #[test]
+    fn test_filter_to_string() {
+        assert_eq!(FilterMode::Normal.to_string(), "Normal Image");
+        assert_eq!(FilterMode::RedPlane(0).to_string(), "Red Plane 0");
+    }
 }

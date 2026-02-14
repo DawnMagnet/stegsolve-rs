@@ -1,13 +1,14 @@
 <p align="center">
-	<img src="icon.svg" width="160" alt="Stegsolve-rs Logo">
+	<img src="assets/icons/icon.svg" width="160" alt="Stegsolve-rs Logo">
 </p>
 
 # Stegsolve-rs
 
+[![CI](https://github.com/DawnMagnet/stegsolve-rs/actions/workflows/ci.yml/badge.svg)](https://github.com/DawnMagnet/stegsolve-rs/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/DawnMagnet/stegsolve-rs?display_name=tag)](https://github.com/DawnMagnet/stegsolve-rs/releases)
 [![License](https://img.shields.io/github/license/DawnMagnet/stegsolve-rs)](LICENSE)
 ![Rust](https://img.shields.io/badge/rust-stable-orange?logo=rust)
-![Platform](https://img.shields.io/badge/platform-windows-blue?logo=windows)
+![Platform](https://img.shields.io/badge/platform-linux%20%7C%20windows%20%7C%20macos-blue)
 
 A fast, lightweight image steganography inspection tool built in Rust with a Slint UI.
 

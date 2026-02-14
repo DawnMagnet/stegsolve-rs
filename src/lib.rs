@@ -15,6 +15,6 @@ pub mod presentation;
 pub mod ui;
 
 // Re-export commonly used types
+pub use core::FilterMode;
 pub use core::extract::extract_bits_from_image;
 pub use core::loader::load_frames_from_bytes;
-pub use core::FilterMode;

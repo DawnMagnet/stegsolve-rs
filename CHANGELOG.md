@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.1] - 2026-02-14
+
+Fix Package Metadata
+
+### Fixed
+
+- Updated `Cargo.toml` with correct package metadata, including name, version, description, and repository URL.
+
 ## [0.2.0] - 2026-02-14
 
 ### Added

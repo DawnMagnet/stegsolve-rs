@@ -27,9 +27,23 @@ nfpms:
       - rpm
       - archlinux
       - apk
-    dependencies:
-      - libxkbcommon0
-      - libfontconfig1
+    overrides:
+      deb:
+        dependencies:
+          - libxkbcommon0
+          - libfontconfig1
+      rpm:
+        dependencies:
+          - libxkbcommon
+          - fontconfig
+      archlinux:
+        dependencies:
+          - libxkbcommon
+          - fontconfig
+      apk:
+        dependencies:
+          - libxkbcommon
+          - fontconfig
     bindir: /usr/bin
 upx:
   - # Whether to enable it or not.

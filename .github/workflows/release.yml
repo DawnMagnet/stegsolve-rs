@@ -1,44 +1,50 @@
-name: Release
-
-permissions:
-  contents: write
+name: goreleaser
 
 on:
+  pull_request:
   push:
     tags:
       - "v*"
 
+env:
+  SCCACHE_GHA_ENABLED: "true"
+  RUSTC_WRAPPER: "sccache"
+
+permissions:
+  contents: write
+
 jobs:
-  release:
+  goreleaser:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Add cross-compile targets
+          submodules: recursive
+      - name: Install Upx
+        run: sudo apt-get install -y upx
+      - name: Run sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.9
+      - name: Set up Zig
+        uses: mlugg/setup-zig@v1
+      - name: Set up Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Configure Rust-Zigbuild
         run: |
+          cargo install --locked cargo-zigbuild
           rustup target add x86_64-unknown-linux-gnu
           rustup target add aarch64-unknown-linux-gnu
           rustup target add x86_64-pc-windows-gnu
-
-      - name: Install cargo-zigbuild
-        run: pip3 install cargo-zigbuild
-
-      - name: Install dependencies
+      - name: Set up MinGW (only binutils)
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-mingw-w64-x86-64 upx sccache
-
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq --no-install-recommends binutils-mingw-w64
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
-          distribution: goreleaser-pro
-          version: "~> v2"
+          distribution: goreleaser
+          version: "latest"
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}

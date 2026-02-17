@@ -1,6 +1,6 @@
 [package]
 name = "stegsolve-rs"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2024"
 authors = ["DawnMagnet"]
 description = "A Rust implementation of Stegsolve for steganography analysis"
@@ -27,25 +27,23 @@ path = "src/main.rs"
 # when linux build, use slint with the "backend-linuxkms" feature, which uses the KMS/DRM subsystem for rendering. This allows for better performance and compatibility with a wider range of hardware.
 
 [target.'cfg(target_os = "linux")'.dependencies]
-slint = { version = "*", default-features = false, features = [
-    "std",
-    "backend-winit",
-    "renderer-software",
-    "compat-1-2",
-] }
-rfd = { version = "*", default-features = false, features = ["xdg-portal"] }
 fontique = { version = "0.7", features = ["fontconfig-dlopen"] }
 
-[target.'cfg(not(target_os = "linux"))'.dependencies]
-slint = { version = "*", default-features = false, features = [
+[target.'cfg(not(target_os = "windows"))'.dependencies]
+rfd = { version = "0.17", default-features = false, features = ["xdg-portal"] }
+
+[target.'cfg(windows)'.dependencies]
+rfd = { version = "0.17", default-features = false, features = [
+    "common-controls-v6",
+] }
+[dependencies]
+slint = { version = "1.15", default-features = false, features = [
     "std",
     "backend-winit",
-    "renderer-software",
+    "renderer-femtovg",
     "compat-1-2",
 ] }
-rfd = "*"
-[dependencies]
-image = { version = "*", default-features = false, features = [
+image = { version = "0.25", default-features = false, features = [
     "png",
     "jpeg",
     "gif",
@@ -53,8 +51,10 @@ image = { version = "*", default-features = false, features = [
     "tiff",
     "webp",
 ] }
-anyhow = "*"
-arboard = "*"
+anyhow = "1"
+arboard = "3"
+serde = { version = "1.0", features = ["derive"] }
+confy = "0.6"
 
 [dev-dependencies]
 proptest = "*"

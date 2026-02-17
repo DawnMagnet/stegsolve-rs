@@ -1,5 +1,13 @@
 use crate::core::filters::FilterMode;
 use image::DynamicImage;
+use serde::{Deserialize, Serialize};
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ThemeMode {
+    System,
+    Light,
+    Dark,
+}
 
 pub struct AppState {
     frames: Vec<DynamicImage>,
@@ -9,6 +17,7 @@ pub struct AppState {
     extract_mask: u32,
     is_playing: bool,
     show_mask_overlay: bool,
+    theme_mode: ThemeMode,
 }
 
 impl Default for AppState {
@@ -21,6 +30,7 @@ impl Default for AppState {
             extract_mask: 0,
             is_playing: false,
             show_mask_overlay: false,
+            theme_mode: ThemeMode::System,
         }
     }
 }
@@ -76,6 +86,62 @@ impl AppState {
 
     pub fn set_show_mask_overlay(&mut self, enabled: bool) {
         self.show_mask_overlay = enabled;
+    }
+
+    pub fn theme_mode(&self) -> ThemeMode {
+        self.theme_mode
+    }
+
+    pub fn set_theme_mode(&mut self, mode: ThemeMode) {
+        self.theme_mode = mode;
+    }
+
+    pub fn theme_index(&self) -> i32 {
+        match self.theme_mode {
+            ThemeMode::System => 0,
+            ThemeMode::Light => 1,
+            ThemeMode::Dark => 2,
+        }
+    }
+
+    pub fn load_theme_config(&mut self) {
+        // Persist only theme selection using confy to avoid serializing image data
+        #[derive(Serialize, Deserialize)]
+        struct ThemeConfig {
+            theme_mode: ThemeMode,
+        }
+
+        impl Default for ThemeConfig {
+            fn default() -> Self {
+                ThemeConfig {
+                    theme_mode: ThemeMode::System,
+                }
+            }
+        }
+
+        if let Ok(cfg) = confy::load::<ThemeConfig>("stegsolve-rs", None) {
+            self.theme_mode = cfg.theme_mode;
+        }
+    }
+
+    pub fn save_theme_config(&self) {
+        #[derive(Serialize, Deserialize)]
+        struct ThemeConfig {
+            theme_mode: ThemeMode,
+        }
+
+        impl Default for ThemeConfig {
+            fn default() -> Self {
+                ThemeConfig {
+                    theme_mode: ThemeMode::System,
+                }
+            }
+        }
+
+        let cfg = ThemeConfig {
+            theme_mode: self.theme_mode,
+        };
+        let _ = confy::store("stegsolve-rs", None, cfg);
     }
 }
 

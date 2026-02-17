@@ -6,10 +6,12 @@ import {
     Slider,
     TextEdit,
     ComboBox,
+    Palette,
 } from "std-widgets.slint";
 import { DataExtractDialog } from "data-extract.slint";
 
 export { DataExtractDialog }
+export { Palette }
 
 export component AppWindow inherits Window {
     title: "Rust StegSolve";
@@ -29,6 +31,7 @@ export component AppWindow inherits Window {
     callback toggle-play();
     callback stereo-enabled-changed(bool);
     callback stereo-offset-changed(float);
+    callback toggle-theme();
 
     // 属性定义
     in property <image> displayed-image;
@@ -38,6 +41,7 @@ export component AppWindow inherits Window {
     in-out property <bool> stereo-enabled: false;
     in-out property <float> stereo-offset: 0;
     in property <bool> is-playing: false;
+    in-out property <int> theme-index: 0;
 
     VerticalBox {
         padding: 5px;
@@ -47,7 +51,7 @@ export component AppWindow inherits Window {
         HorizontalBox {
             padding: 0;
             spacing: 10px;
-            alignment: start;
+            // alignment: start; // Check removed to fix spacer stretching
             Button {
                 text: "Open File";
                 height: 30px;
@@ -86,13 +90,29 @@ export component AppWindow inherits Window {
                 font-size: 12px;
                 color: gray;
             }
+
+            Rectangle {
+                horizontal-stretch: 1;
+                background: transparent;
+            }
+
+            // Theme toggle button (right aligned)
+            Button {
+                width: 36px;
+                height: 30px;
+                clicked => {
+                    root.toggle-theme();
+                }
+                icon: root.theme-index == 0 ? @image-url("../assets/icons/theme-system.svg") : root.theme-index == 1 ? @image-url("../assets/icons/theme-light.svg") : @image-url("../assets/icons/theme-dark.svg");
+                colorize-icon: true;
+            }
         }
 
         // 图片显示区域
         Rectangle {
-            background: #202020;
+            background: Palette.control-background;
             border-width: 1px;
-            border-color: #444;
+            border-color: Palette.border;
             clip: true;
             vertical-stretch: 1; // 占据所有可用空间
 

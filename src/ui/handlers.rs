@@ -6,6 +6,7 @@ use crate::core::loader::load_frames_from_bytes;
 use crate::presentation::hex::{format_binary, format_hex_ascii, format_hex_compact};
 use crate::presentation::stereo::render_stereo;
 use crate::ui::helpers::{refresh_ui, update_extract_preview};
+use crate::ui::state::ThemeMode;
 use crate::ui::state::{AppState, FilterNavigation, FrameNavigation, MaskUpdate};
 use slint::{ComponentHandle, SharedString, Timer, TimerMode};
 use std::cell::RefCell;
@@ -313,4 +314,37 @@ pub fn setup_extract_handlers(
         dialog.show().ok();
         update_extract_preview(&dialog, &state_clone.borrow());
     });
+}
+
+pub fn setup_theme_handlers(ui: &AppWindow, state: &Rc<RefCell<AppState>>) {
+    // Apply saved theme on setup
+    apply_theme_to_ui(ui, state.borrow().theme_mode());
+
+    let ui_handle = ui.as_weak();
+    let state_clone = state.clone();
+    ui.on_toggle_theme(move || {
+        let ui = ui_handle.unwrap();
+        let mut s = state_clone.borrow_mut();
+        let current = s.theme_mode();
+        let next = match current {
+            ThemeMode::System => ThemeMode::Light,
+            ThemeMode::Light => ThemeMode::Dark,
+            ThemeMode::Dark => ThemeMode::System,
+        };
+        s.set_theme_mode(next);
+        s.save_theme_config();
+        ui.set_theme_index(s.theme_index());
+        apply_theme_to_ui(&ui, next);
+    });
+}
+
+fn apply_theme_to_ui(ui: &AppWindow, mode: ThemeMode) {
+    use slint::ComponentHandle;
+    use slint::language::ColorScheme;
+    let scheme = match mode {
+        ThemeMode::System => ColorScheme::Unknown,
+        ThemeMode::Light => ColorScheme::Light,
+        ThemeMode::Dark => ColorScheme::Dark,
+    };
+    ui.global::<crate::Palette>().set_color_scheme(scheme);
 }

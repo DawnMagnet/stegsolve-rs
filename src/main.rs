@@ -9,6 +9,8 @@ fn main() -> Result<(), slint::PlatformError> {
     let ui = AppWindow::new()?;
     let data_dialog = DataExtractDialog::new()?;
     let state = Rc::new(RefCell::new(AppState::new()));
+    // Load persisted theme selection (if any)
+    state.borrow_mut().load_theme_config();
     let playback_timer = Rc::new(Timer::default());
 
     setup_file_handlers(&ui, &state, &playback_timer);
@@ -18,6 +20,10 @@ fn main() -> Result<(), slint::PlatformError> {
     setup_stereo_handlers(&ui, &state);
     setup_export_handlers(&ui, &state);
     setup_extract_handlers(&ui, &data_dialog, &state);
+    setup_theme_handlers(&ui, &state);
+
+    // Apply theme index to UI so the icon reflects saved selection
+    ui.set_theme_index(state.borrow().theme_index());
 
     ui.run()
 }
